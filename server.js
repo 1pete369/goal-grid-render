@@ -30,7 +30,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
@@ -67,7 +67,7 @@ app.use("/rooms", room_router);
 socketHandler(io);
 
 // Start the server
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT_NUM;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
