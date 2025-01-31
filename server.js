@@ -43,13 +43,29 @@ const allowedOrigins = ['https://goalgrid.vercel.app',"http://localhost:3000"];
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) { // Allow requests without origin (like Postman) or from your frontend domain
+    if (allowedOrigins.includes(origin)) { // Only allow requests from the allowed origins
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   }
 }));
+
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {  // Allow requests from listed origins
+    next();
+  } else if (!origin && process.env.NODE_ENV === 'development') { // Allow requests without origin only in development
+    next();
+  } else if (!origin) { // For other cases when the origin is missing, you can add more logic here.
+       return res.status(403).json({ message: 'Forbidden' });
+  }
+   else {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+});
 
 app.use(express.json());
 
