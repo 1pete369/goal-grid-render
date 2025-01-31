@@ -37,25 +37,25 @@ const io = socketIo(server, {
 
 
 // Middlewares
-app.use((req, res, next) => {
-  const allowedOrigins = ['https://goalgrid.vercel.app', 'http://localhost:3000'];
-  let origin = req.headers.origin || req.headers.referer || req.headers.host;
+const allowedOrigins = ['https://goalgrid.vercel.app'];
 
-  console.log('Incoming request origin:', origin); // Debugging
+app.use((req, res, next) => {
+  const origin = req.headers.origin || req.headers.referer || req.headers.host;
 
   if (origin && allowedOrigins.includes(origin.replace(/\/$/, ''))) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS'); // 🔥 Added PATCH
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
 
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    return res.sendStatus(204);
   }
 
   next();
 });
+
 
 app.use(express.json());
 
