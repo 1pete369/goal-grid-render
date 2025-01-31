@@ -30,10 +30,11 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "https://goalgrid.vercel.app/",
+    origin: "https://goalgrid.vercel.app", // Allow only this domain
     methods: ["GET", "POST"],
   },
 });
+
 
 // Middlewares
 app.use(cors());
