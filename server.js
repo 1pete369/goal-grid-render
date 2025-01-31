@@ -53,7 +53,7 @@ connectRedis();
 // Apply routes
 app.get("/", (req, res) => {
   console.log("API route accessed from: ", req.headers.origin); // Log the origin of the request
-  res.json({ message: "Welcome to the Home API" });
+  res.json({ message: "Welcome to the Home API" , origin : req.headers.origin });
 });
 
 app.use("/users", users_router);
