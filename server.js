@@ -38,12 +38,12 @@ const io = socketIo(server, {
 
 // Middlewares
 app.use((req, res, next) => {
-  console.log('Incoming request origin:', req.headers.origin); // Debugging
-  
   const allowedOrigins = ['https://goalgrid.vercel.app', 'http://localhost:3000'];
-  const origin = req.headers.origin;
+  let origin = req.headers.origin || req.headers.referer || req.headers.host;
 
-  if (allowedOrigins.includes(origin)) {
+  console.log('Incoming request origin:', origin); // Debugging
+
+  if (origin && allowedOrigins.includes(origin.replace(/\/$/, ''))) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -53,9 +53,10 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
-  
+
   next();
 });
+
 app.use(express.json());
 
 // Connect to MongoDB and Redis
