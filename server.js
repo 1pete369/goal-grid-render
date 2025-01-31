@@ -37,25 +37,19 @@ const io = socketIo(server, {
 
 
 // Middlewares
-const allowedOrigins = ['https://goalgrid.vercel.app'];
+const allowedOrigins = ['https://goalgrid.vercel.app',"http://localhost:3000"];
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin || req.headers.referer || req.headers.host;
+// const allowedOrigins = ['your-frontend-domain.com']; // Replace with your frontend's domain
 
-  if (origin && allowedOrigins.includes(origin.replace(/\/$/, ''))) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS'); // 🔥 Added PATCH
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) { // Allow requests without origin (like Postman) or from your frontend domain
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   }
-
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-
-  next();
-});
-
+}));
 
 app.use(express.json());
 
