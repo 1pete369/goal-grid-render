@@ -37,13 +37,25 @@ const io = socketIo(server, {
 
 
 // Middlewares
-app.use(
-  cors({
-    origin: ["https://goalgrid.vercel.app", "http://localhost:3000"], // Allow only these domains
-    methods: ["GET", "POST"],
-  })
-);
+app.use((req, res, next) => {
+  console.log('Incoming request origin:', req.headers.origin); // Debugging
+  
+  const allowedOrigins = ['https://goalgrid.vercel.app', 'http://localhost:3000'];
+  const origin = req.headers.origin;
 
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
 app.use(express.json());
 
 // Connect to MongoDB and Redis
@@ -52,7 +64,7 @@ connectRedis();
 
 // Apply routes
 app.get("/", (req, res) => {
-  console.log("API route accessed from: ", req.headers.origin); // Log the origin of the request
+  // console.log("API route accessed from: ", req.headers.origin); // Log the origin of the request
   res.json({ message: "Welcome to the Home API" , origin : req.headers.origin });
 });
 
