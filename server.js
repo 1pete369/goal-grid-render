@@ -37,35 +37,36 @@ const io = socketIo(server, {
 
 
 // Middlewares
-const allowedOrigins = ['https://goalgrid.vercel.app',"http://localhost:3000"];
-
-// const allowedOrigins = ['your-frontend-domain.com']; // Replace with your frontend's domain
+const allowedOrigins = ['https://goalgrid.vercel.app', 'http://localhost:3000'];
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (allowedOrigins.includes(origin)) { // Only allow requests from the allowed origins
+    if (!origin || allowedOrigins.includes(origin)) { // Allow requests with no origin (like mobile apps, Postman)
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
-  }
+  },
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true, // Allow credentials (cookies, auth headers)
 }));
 
+// Handle preflight requests
+app.options('*', cors());
 
+// Middleware to log and allow missing origins (helps in debugging)
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
+  console.log("Incoming request origin:", req.headers.origin); // Debug log
 
-  if (allowedOrigins.includes(origin)) {  // Allow requests from listed origins
+  const origin = req.headers.origin;
+  if (!origin || allowedOrigins.includes(origin)) {
     next();
-  } else if (!origin && process.env.NODE_ENV === 'development') { // Allow requests without origin only in development
-    next();
-  } else if (!origin) { // For other cases when the origin is missing, you can add more logic here.
-       return res.status(403).json({ message: 'Forbidden' });
-  }
-   else {
+  } else {
     return res.status(403).json({ message: 'Forbidden' });
   }
 });
+
 
 app.use(express.json());
 
