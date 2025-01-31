@@ -30,14 +30,20 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "https://goalgrid.vercel.app", // Allow only this domain
+    origin: ["https://goalgrid.vercel.app","http://localhost:3000"], // Allow only this domain
     methods: ["GET", "POST"],
   },
 });
 
 
 // Middlewares
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://goalgrid.vercel.app", "http://localhost:3000"], // Allow only these domains
+    methods: ["GET", "POST"],
+  })
+);
+
 app.use(express.json());
 
 // Connect to MongoDB and Redis
