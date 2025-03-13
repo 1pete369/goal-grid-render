@@ -71,4 +71,15 @@ router.patch("/join-the-user", async (req, res) => {
   }
 })
 
+router.get("/get-all-rooms",async(req,res)=>{
+  try{
+    const rooms = await Room.find().select("name").lean()
+    const roomNames = rooms.map(room=>room.name)
+
+    res.json(roomNames)
+  }catch(error){
+    res.json({message : "Error",error})
+  }
+})
+
 module.exports = router

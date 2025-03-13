@@ -6,9 +6,11 @@ const goal = new mongoose.Schema({
   name: String,
   description: String,
   category : String,
+  goalColor : String,
   createdAt : String,
-  duration : Number,
-  habits: [{ type: mongoose.Schema.Types.ObjectId, ref: "habit" }],
+  duration: String,
+  deadline : String,
+  habits: [{ type: mongoose.Schema.Types.ObjectId, ref: "Habit" }],
   progress: {
     totalCompleted : Number,
     completionRate: Number

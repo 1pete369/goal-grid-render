@@ -8,7 +8,8 @@ const subscriptionSchema = new mongoose.Schema({
     startDate: String,
     expiryDate: String,
     isActive: { type: Boolean, default: true },
-    durationInMonths : {type : Number, required : true}
+    durationInMonths : {type : Number, required : true},
+    billingCycle :  { type: String, enum: ["monthly","yearly"], required: true }
 });
 
 module.exports = mongoose.model("Subscription", subscriptionSchema);

@@ -41,11 +41,11 @@ router.get("/check-subscription-status/:id", async (req, res) => {
 
 router.patch("/update-subscription-status/:id", async (req, res) => {
   const uid = req.params.id
-  const { plan, startDate, expiryDate, isActive } = req.body
+  const { plan, startDate, expiryDate, isActive, billingCycle, durationInMonths } = req.body
   try {
     const subscriptionObject = await Subscription.findOneAndUpdate(
       { uid },
-      { $set: { plan, startDate, expiryDate, isActive } },
+      { $set: { plan, startDate, expiryDate, isActive , billingCycle , durationInMonths} },
       { new: true }
     )
     res.json({ message: "subscription status updated", subscriptionObject })

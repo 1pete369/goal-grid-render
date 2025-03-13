@@ -6,7 +6,8 @@ const category = new mongoose.Schema({
     id : String,
     dueDate :String,
     categoryTodos : [{type : mongoose.Schema.Types.ObjectId, ref : "todos"}],
-    categoryColor : String
+    categoryColor : String,
+    createdAt : String
 })
 
 module.exports = mongoose.model("category", category)

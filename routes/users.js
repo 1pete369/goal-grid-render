@@ -87,7 +87,7 @@ router.get("/fetch-user/:id", async (req, res) => {
   try {
     const mainUserObject = await user.findOne({ uid: uid })
 
-    console.log(mainUserObject)
+    // console.log(mainUserObject)
     res.json({ userObject: mainUserObject })
   } catch (err) {
     res.json({ message: err.message })
@@ -350,6 +350,7 @@ router.post("/get-users-by-ids", async (req, res) => {
     res.status(500).json({ error: "Error fetching users" })
   }
 })
+
 
 router.patch("/update-subscription-status/:id", async (req, res) => {
   const uid = req.params.id

@@ -7,6 +7,8 @@ const habit = new mongoose.Schema({
     description: String,
     category: String,
     startDate: String,
+    endDate: String,
+    habitColor:String,
     duration: String,
     streak: {
       current: Number,
@@ -21,7 +23,8 @@ const habit = new mongoose.Schema({
         of: Boolean
     },
     status: String,
-    linkedGoal : String
+    linkedGoal : String,
+    createdAt :  { type: Date, default: Date.now } 
 })
 
-module.exports = mongoose.model("habit",habit)
+module.exports = mongoose.model("Habit",habit)

@@ -9,5 +9,4 @@ const Note = new mongoose.Schema({
     createdAt : String
 })
 
-
 module.exports = mongoose.model("Note",Note)

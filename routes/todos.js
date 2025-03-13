@@ -12,6 +12,21 @@ router.get("/", (req, res) => {
   }
 })
 
+router.get("/get-resource-count/:id", async (req, res) => {
+  const uid = req.params.id
+  try {
+    const resourceCount = await todo.countDocuments({ uid })
+    if (resourceCount > 0) {
+      res.status(200).json({ resourceCount })
+    } else {
+      res.status(200).json({ resourceCount: 0 })
+    }
+  } catch (error) {
+    res.json(500).json({ error: "Internal server error" })
+  }
+})
+
+
 router.get("/get-todo/:id", async (req, res) => {
   const id = req.params.id
   try {
