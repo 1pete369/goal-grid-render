@@ -5,11 +5,13 @@ const router = express.Router()
 // Get all journals for a user
 router.get("/get-journals/:id", async (req, res) => {
   const uid = req.params.id
+  console.log("User id",uid)
   try {
     const journals = await Journal.find({ uid })
     console.log("Journals",journals)
     if (journals.length === 0) {
-      return res.status(404).json({ message: "No journals found", journals: [] })
+      console.log("Empty journals")
+      return res.status(200).json({ message: "No journals found", journals: [] })
     }
     res.status(200).json({ message: "Journals found", journals })
   } catch (error) {
