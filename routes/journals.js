@@ -7,6 +7,7 @@ router.get("/get-journals/:id", async (req, res) => {
   const uid = req.params.id
   try {
     const journals = await Journal.find({ uid })
+    console.log("Journals",journals)
     if (journals.length === 0) {
       return res.status(404).json({ message: "No journals found", journals: [] })
     }
@@ -29,8 +30,6 @@ router.get("/get-resource-count/:id", async (req, res) => {
     res.json(500).json({ error: "Internal server error" })
   }
 })
-
-
 
 // Get a single journal by ID
 router.get("/get-journal/:id", async (req, res) => {
