@@ -37,12 +37,11 @@ router.get("/get-tasks/:uid", async (req, res) => {
 
     // Fetch only tasks created today
     const tasks = await Task.find({
-      uid: uid
-      // ,
-      // createdAt: {
-      //   $gte: startOfDay, // ⏳ Created **after** midnight today
-      //   $lte: endOfDay // ⏳ Created **before** 11:59 PM today
-      // }
+      uid: uid,
+      createdAt: {
+        $gte: startOfDay, // ⏳ Created **after** midnight today
+        $lte: endOfDay // ⏳ Created **before** 11:59 PM today
+      }
     })
 
     return res.status(200).json({ tasks })

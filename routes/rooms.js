@@ -35,6 +35,7 @@ router.get("/is-user-joined", async (req, res) => {
   console.log(req.params)
 
   console.log("In User Join checking")
+  
   console.log("Id , roomname", { id, roomName })
   try {
     const room = await Room.findOne({ name: roomName })

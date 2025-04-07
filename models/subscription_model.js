@@ -9,7 +9,7 @@ const subscriptionSchema = new mongoose.Schema({
     expiryDate: String,
     isActive: { type: Boolean, default: true },
     durationInMonths : {type : Number, required : true},
-    billingCycle :  { type: String, enum: ["monthly","yearly"], required: true }
+    billingCycle: { type: String, enum: ["monthly", "yearly"], default: null }  // Allow null properly
 });
 
 module.exports = mongoose.model("Subscription", subscriptionSchema);

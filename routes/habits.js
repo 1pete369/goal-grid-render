@@ -173,6 +173,7 @@ router.get("/analytics/:id", async (req, res) => {
     const activeHabits = habits.filter(
       (habit) => habit.status === "active"
     ).length
+    
     const completionRate =
       totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0
 
@@ -181,6 +182,7 @@ router.get("/analytics/:id", async (req, res) => {
       ...habits.map((habit) => habit.streak?.current || 0),
       0
     )
+    
     const highestCurrentStreakHabitNames = habits
       .filter((habit) => (habit.streak?.current || 0) === highestCurrentStreak)
       .map((habit) => habit.name)

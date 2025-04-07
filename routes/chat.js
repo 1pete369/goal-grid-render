@@ -35,6 +35,8 @@ router.get("/get-messages/:id", async (req, res) => {
   try {
     const  roomName  = req.params.id
     const messages = await Chat.find({ roomName }).sort({ createdAt: 1 })
+
+    console.log("Messages",messages)
     if(messages.length>0){
       return res.status(200).json({ message: "Messages fetched", data: messages })
     }else{

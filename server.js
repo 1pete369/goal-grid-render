@@ -26,6 +26,9 @@ const media_router = require("./routes/medias")
 const room_router = require("./routes/rooms")
 const task_router = require("./routes/tasks")
 const resource_router = require("./routes/resourceRoutes")
+const analytics_router= require("./routes/analytics")
+const rewards_router = require("./routes/rewards")
+
 
 // Initialize Express
 const app = express()
@@ -102,6 +105,8 @@ app.use("/medias", media_router)
 app.use("/rooms", room_router)
 app.use("/today-tasks", task_router)
 app.use("/resource-route", resource_router)
+app.use("/analytics",analytics_router)
+app.use("/rewards",rewards_router)
 
 // Initialize Socket.IO
 socketHandler(io)

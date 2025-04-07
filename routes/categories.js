@@ -127,4 +127,27 @@ router.patch("/pull-todo-id/:id", async (req, res) => {
   }
 })
 
+router.patch("/update-category-status/:id", async (req, res) => {
+  const id = req.params.id
+  try {
+    const updatedCategory = await category.findOneAndUpdate(
+      {
+        id: id
+      },
+      { $set: { completed: true } },
+      { new: true }
+    )
+    if (updatedCategory) {
+      res
+        .status(200)
+        .json({ message: "Category status updated", updatedCategory })
+    } else {
+      res.status(404).json({ message: "Category not found" })
+    }
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: "Failed to update status" })
+  }
+})
+
 module.exports = router

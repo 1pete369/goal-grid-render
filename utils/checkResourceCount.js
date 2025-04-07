@@ -46,7 +46,7 @@ const checkResourceCount = async (req, res) => {
         // Filter tasks created today
         countQuery.createdAt = { $gte: todayStart }
     } else if (
-        ["notes", "journals", "habits", "goals", "categories"].includes(resource)
+        ["notes", "journals", "habits", "goals", "categories","taskCategories"].includes(resource)
     ) {
         // Fetch the subscription directly from the database
         const subscription = await Subscription.findOne({ uid: uid })
@@ -62,7 +62,9 @@ const checkResourceCount = async (req, res) => {
       nextResetDate.setMonth(nextResetDate.getMonth() + 1); // Add one month
       
       const subscriptionStartISOString = subscriptionStart.toISOString();
+      console.log("Start ",subscriptionStartISOString)
       const nextResetDateISOString = nextResetDate.toISOString();
+      console.log("Reset ",nextResetDateISOString)
       
       // const journals = await Model.find({
       //   uid,
@@ -90,7 +92,7 @@ const checkResourceCount = async (req, res) => {
 
     const count = await Model.countDocuments({uid : uid, createdAt : countQuery.createdAt})
 
-    console.log("count",count)
+    console.log("count of docs",count)
 
     // Count the number of documents for this user
     // const count = await Model.countDocuments({ uid: uid });

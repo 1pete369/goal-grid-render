@@ -7,7 +7,7 @@ const goal = new mongoose.Schema({
   description: String,
   category : String,
   goalColor : String,
-  createdAt : String,
+  createdAt : { type: Date, default: Date.now },
   duration: String,
   deadline : String,
   habits: [{ type: mongoose.Schema.Types.ObjectId, ref: "Habit" }],

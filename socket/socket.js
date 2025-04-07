@@ -7,18 +7,21 @@ const socketHandler = (io) => {
   io.on("connection", (socket) => {
     console.log("A user connected")
 
-    socket.on('joinRoom', (roomName) => {
-      console.log(`Joining room: ${roomName}`);
-      socket.join(roomName); // Make the socket join the specified room
-  
+    socket.on("joinRoom", (roomName) => {
+      console.log(`Joining room: ${roomName}`)
+      socket.join(roomName) // Make the socket join the specified room
       // Optionally, you can emit a message to the room that a user has joined
-      io.to(roomName).emit('chatMessage', { user: 'System', message: `${socket.id} has joined the room.` });
-    });
+      // io.to(roomName).emit('chatMessage', { user: 'System', message: `${socket.id} has joined the room.` });
+    })
+
+    // Example in your socket server
+    socket.on("userJoined", ({ roomName, userId }) => {
+      socket.to(roomName).emit("newUserJoined", userId)
+    })
 
     socket.on("sendMessage", async (messageData) => {
       const { id, message, uid, roomName, type, mediaUrl, mediaType } =
         messageData
-
       try {
         // Save message to MongoDB
         const newMessage = new Chat({
@@ -64,12 +67,14 @@ const socketHandler = (io) => {
       // Connect to Redis subscriber
       await subscriber.connect()
       console.log("Redis Subscriber Connected ✅")
-  
+
       // Fetch all room names from the API
-      const response = await axios.get("http://localhost:3001/rooms/get-all-rooms")
+      const response = await axios.get(
+        "http://localhost:3001/rooms/get-all-rooms"
+      )
       const activeRooms = response.data // This is an array of room names directly
       console.log("activeRooms", activeRooms)
-  
+
       // Subscribe to each room dynamically
       for (const roomName of activeRooms) {
         // Check if roomName is a valid string
@@ -77,16 +82,16 @@ const socketHandler = (io) => {
           console.error(`Invalid roomName:`, roomName)
           continue // Skip this iteration if roomName is invalid
         }
-  
+
         // Log the roomName
         console.log(`Subscribing to room: ${roomName}`)
-  
+
         // Subscribe to each room individually
         await subscriber.subscribe(roomName, (message) => {
           try {
             const parsedMessage = JSON.parse(message)
             console.log(`Received message in room ${roomName}:`, parsedMessage)
-  
+
             // Emit the message to the specific room
             io.to(roomName).emit("chatMessage", parsedMessage)
           } catch (err) {
@@ -99,8 +104,6 @@ const socketHandler = (io) => {
       console.error("Error connecting Redis subscriber:", error)
     }
   })()
-  
-  
 }
 
 module.exports = socketHandler

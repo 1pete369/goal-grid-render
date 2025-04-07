@@ -7,7 +7,17 @@ const category = new mongoose.Schema({
     dueDate :String,
     categoryTodos : [{type : mongoose.Schema.Types.ObjectId, ref : "todos"}],
     categoryColor : String,
-    createdAt : String
+    createdAt : String,
+    completed : Boolean
 })
 
 module.exports = mongoose.model("category", category)
+
+// uid: string
+// name: string
+// id: string
+// dueDate: string
+// categoryTodos: Todo[]
+// categoryColor: string
+// createdAt: string
+// completed : boolean

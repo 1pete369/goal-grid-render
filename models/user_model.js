@@ -15,6 +15,16 @@ const user = new mongoose.Schema({
     referralSource: String,
     gender: String
   },
+  progress: {
+    xp: { type: Number, default: 0 },
+    tokens: { type: Number, default: 0 },
+    level: { type: Number, default: 1 },
+    streak: { type: Number, default: 0 },
+    dailyRewardsClaimed: [{
+      date: { type: Date, default: Date.now }, // Date of reward claim
+      rewards: [String] // Array of rewards claimed that day
+    }]
+  },
   isOnboardingComplete: Boolean,
   customData: {
     timezone: {
@@ -40,7 +50,7 @@ const user = new mongoose.Schema({
   timings: {
     createdAt: String,
     lastLoginAt: String
-  },
+  }
 })
 
 module.exports = mongoose.model("users", user)
