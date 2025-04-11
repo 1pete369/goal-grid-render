@@ -1,6 +1,7 @@
 const express = require("express")
 
 const  todo  = require("../models/todo_model")
+const verifyJWT = require("../middleware/verifyJWT")
 
 const router = express.Router()
 
@@ -12,8 +13,11 @@ router.get("/", (req, res) => {
   }
 })
 
-router.get("/get-resource-count/:id", async (req, res) => {
+router.get("/get-resource-count/:id",verifyJWT ,async (req, res) => {
   const uid = req.params.id
+  if (req.user.uid !== uid) {
+    return res.status(403).json({ message: "Forbidden: UID mismatch" });
+  }
   try {
     const resourceCount = await todo.countDocuments({ uid })
     if (resourceCount > 0) {
@@ -27,19 +31,22 @@ router.get("/get-resource-count/:id", async (req, res) => {
 })
 
 
-router.get("/get-todo/:id", async (req, res) => {
+router.get("/get-todo/:id",verifyJWT , async (req, res) => {
   const id = req.params.id
   try {
-    const fetchedTodo = await todo.findOne({ id })
+    const fetchedTodo = await todo.findOne({ id , uid : req.user.uid})
     res.json({ todo: fetchedTodo })
   } catch (err) {
     res.json({ Error: err })
   }
 })
 
-router.post("/create-todo", async (req, res) => {
+router.post("/create-todo",verifyJWT , async (req, res) => {
   const todoObject = req.body.todo
   console.log(todoObject)
+  if (req.user.uid !== todoObject.uid) {
+    return res.status(403).json({ message: "Forbidden: UID mismatch" });
+  }
   try {
     const newTodoObject = new todo(todoObject)
     await newTodoObject.save()
@@ -54,13 +61,13 @@ router.post("/create-todo", async (req, res) => {
   }
 })
 
-router.patch("/check-todo/:id", async (req, res) => {
+router.patch("/check-todo/:id",verifyJWT , async (req, res) => {
   const id = req.params.id
   const { categoryId, status } = req.body
   console.log("Check todos called", id, categoryId, status)
   try {
     const todoObject = await todo.findOneAndUpdate(
-      { id , categoryId },
+      { id , categoryId, uid : req.user.uid },
       { $set: {completed : status} },
       { new: true }
     )
@@ -72,10 +79,10 @@ router.patch("/check-todo/:id", async (req, res) => {
   }
 })
 
-router.delete("/delete-todo/:id", async (req, res) => {
+router.delete("/delete-todo/:id",verifyJWT , async (req, res) => {
   const id = req.params.id
   try {
-    const response = await todo.findOneAndDelete({ id })
+    const response = await todo.findOneAndDelete({ id , uid : req.user.uid})
 
     if (response) {
       res.json({

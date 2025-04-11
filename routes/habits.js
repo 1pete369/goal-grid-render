@@ -2,14 +2,20 @@ const express = require("express")
 const router = express.Router()
 
 const Habit = require("../models/habit_model")
+const verifyJWT = require("../middleware/verifyJWT")
 
 // Root route (can be removed if unnecessary)
 router.get("/", (req, res) => {
   res.status(200).json({ message: "in habit route" })
 })
 
-router.get("/get-resource-count/:id", async (req, res) => {
+router.get("/get-resource-count/:id", verifyJWT, async (req, res) => {
   const uid = req.params.id
+
+  if (req.user.uid !== uid) {
+    return res.status(403).json({ message: "Forbidden: UID mismatch" })
+  }
+
   try {
     const resourceCount = await Habit.countDocuments({ uid })
     if (resourceCount > 0) {
@@ -23,10 +29,13 @@ router.get("/get-resource-count/:id", async (req, res) => {
 })
 
 // Fetch habits for a user
-router.get("/get-habits/:id", async (req, res) => {
-  const { id } = req.params
+router.get("/get-habits/:id", verifyJWT, async (req, res) => {
+  const uid = req.params.id
+  if (req.user.uid !== uid) {
+    return res.status(403).json({ message: "Forbidden: UID mismatch" })
+  }
   try {
-    const habits = await Habit.find({ uid: id })
+    const habits = await Habit.find({ uid: uid })
     if (habits.length === 0)
       return res.status(200).json({ message: "No habits found", data: [] })
     res.status(200).json({ message: "Habits Fetched", data: habits })
@@ -36,8 +45,13 @@ router.get("/get-habits/:id", async (req, res) => {
 })
 
 // Create a new habit
-router.post("/create-habit", async (req, res) => {
+router.post("/create-habit", verifyJWT, async (req, res) => {
   const { habit } = req.body
+
+  if (req.user.uid !== habit.uid) {
+    return res.status(403).json({ message: "Forbidden: UID mismatch" })
+  }
+
   try {
     const habitCreated = new Habit(habit)
     await habitCreated.save()
@@ -48,9 +62,16 @@ router.post("/create-habit", async (req, res) => {
 })
 
 // Delete a habit
-router.delete("/delete-habit/:id", async (req, res) => {
+router.delete("/delete-habit/:id", verifyJWT, async (req, res) => {
   const id = req.params.id
+
   try {
+    const fetchedHabit = await Habit.findOne({ id })
+
+    if (req.user.uid !== fetchedHabit.uid) {
+      return res.status(403).json({ message: "Forbidden: UID mismatch" })
+    }
+
     const deletedHabit = await Habit.findOneAndDelete({ id })
     if (!deletedHabit) {
       return res.status(404).json({ message: "Habit not found" })
@@ -60,8 +81,9 @@ router.delete("/delete-habit/:id", async (req, res) => {
     res.status(500).json({ message: "Error Occurred", error })
   }
 })
+
 // Delete multiple linked habits
-router.delete("/delete-linked-habits", async (req, res) => {
+router.delete("/delete-linked-habits", verifyJWT, async (req, res) => {
   const { habitIds } = req.body
 
   if (!habitIds || habitIds.length === 0) {
@@ -69,11 +91,20 @@ router.delete("/delete-linked-habits", async (req, res) => {
   }
 
   try {
-    const deletedHabits = await Habit.deleteMany({ id: { $in: habitIds } })
+    const userHabits = await Habit.find({
+      id: { $in: habitIds },
+      uid: req.user.uid
+    })
 
-    if (deletedHabits.deletedCount === 0) {
-      return res.status(404).json({ message: "No habits found to delete" })
+    if (userHabits.length === 0) {
+      return res.status(404).json({ message: "No habits found for this user" })
     }
+
+    const habitIdsToDelete = userHabits.map((habit) => habit.id)
+
+    const deletedHabits = await Habit.deleteMany({
+      id: { $in: habitIdsToDelete }
+    })
 
     res
       .status(200)
@@ -83,12 +114,15 @@ router.delete("/delete-linked-habits", async (req, res) => {
   }
 })
 
-module.exports = router
-
 // Update habit status
-router.patch("/update-habit-status/:id", async (req, res) => {
+router.patch("/update-habit-status/:id", verifyJWT, async (req, res) => {
   const { id } = req.params
+
   const updatedHabit = req.body.habit
+
+  if (req.user.uid !== updatedHabit.uid) {
+    return res.status(403).json({ message: "Forbidden: UID mismatch" })
+  }
 
   try {
     const habitUpdated = await Habit.findOneAndUpdate(
@@ -116,50 +150,12 @@ router.patch("/update-habit-status/:id", async (req, res) => {
   }
 })
 
-// 📊 Get overall habit analytics
-// 📊 Get overall habit analytics
-// router.get("/analytics/habits/:id", async (req, res) => {
-
-//   const uid= req.params.id
-
-//   try {
-//     const habits = await Habit.find({ uid }); // Get user's habits
-
-//     const totalHabits = habits.length;
-//     const completedHabits = habits.filter(h => h.status === "completed").length;
-//     const activeHabits = habits.filter(h => h.status === "active").length;
-//     const abandonedHabits = totalHabits - (completedHabits + activeHabits);
-
-//     let totalCompletedDays = 0;
-//     let totalPossibleDays = 0;
-//     let bestStreak = 0;
-//     let totalStreaks = 0;
-
-//     habits.forEach(habit => {
-//       totalCompletedDays += habit.progress.totalCompleted;
-//       totalPossibleDays += Object.keys(habit.dailyTracking).length; // Count total days tracked
-//       bestStreak = Math.max(bestStreak, habit.streak.best);
-//       totalStreaks += habit.streak.best;
-//     });
-
-//     const overallCompletionRate = totalPossibleDays > 0 ? (totalCompletedDays / totalPossibleDays) * 100 : 0;
-//     const averageStreak = totalHabits > 0 ? (totalStreaks / totalHabits) : 0;
-
-//     res.json({
-//       totalHabits,
-//       completedHabits,
-//       activeHabits,
-//       abandonedHabits,
-//       overallCompletionRate: parseFloat(overallCompletionRate.toFixed(2)), // Keep it clean
-//       bestStreak,
-//       averageStreak: parseFloat(averageStreak.toFixed(2)) // Keep it clean
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server Error", error });
-//   }
-// });
-router.get("/analytics/:id", async (req, res) => {
+router.get("/analytics/:id", verifyJWT, async (req, res) => {
   const uid = req.params.id
+
+  if (req.user.uid !== uid) {
+    return res.status(403).json({ message: "Forbidden: UID mismatch" })
+  }
 
   try {
     const habits = await Habit.find({ uid })
@@ -173,7 +169,7 @@ router.get("/analytics/:id", async (req, res) => {
     const activeHabits = habits.filter(
       (habit) => habit.status === "active"
     ).length
-    
+
     const completionRate =
       totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0
 
@@ -182,7 +178,7 @@ router.get("/analytics/:id", async (req, res) => {
       ...habits.map((habit) => habit.streak?.current || 0),
       0
     )
-    
+
     const highestCurrentStreakHabitNames = habits
       .filter((habit) => (habit.streak?.current || 0) === highestCurrentStreak)
       .map((habit) => habit.name)
@@ -352,102 +348,5 @@ router.get("/analytics/:id", async (req, res) => {
     res.status(500).json({ message: "Internal server error", error })
   }
 })
-
-// router.get("/new-analytics/:id", async (req, res) => {
-//   try {
-//     console.log("came")
-
-//     const uid = req.params.id
-
-//     const basicStats = await Habit.aggregate([
-//       { $match: { uid } },
-//       {
-//         $group: {
-//           _id: null,
-//           totalHabits: { $sum: 1 },
-//           completedHabits: {
-//             $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] }
-//           },
-//           activeHabits: {
-//             $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] }
-//           }
-//         }
-//       },
-//       {
-//         $project: {
-//           _id: 0, // Exclude _id from the final output
-//           totalHabits: 1, // Show totalHabits
-//           completedHabits: 1, // Show completedHabits
-//           activeHabits: 1, // Show activeHabits
-//           completionRate: {
-//             $round: [
-//               {
-//                 $cond: [
-//                   { $gt: ["$totalHabits", 0] },
-//                   {
-//                     $multiply: [
-//                       { $divide: ["$completedHabits", "$totalHabits"] },
-//                       100
-//                     ]
-//                   },
-//                   0
-//                 ]
-//               },
-//               0 // Round to 0 decimal places
-//             ]
-//           }
-//         }
-//       }
-//     ])
-
-//     const streaks = await Habit.aggregate([
-//       { $match: { uid } },
-//       {
-//         $group: {
-//           _id: null,
-//           highestCurrentStreak: { $max: "$streak.current" },
-//           highestBestStreak: { $max: "$streak.best" }
-//         }
-//       }
-//     ])
-
-//     const highestCurrentStreakHabit = await Habit.findOne(
-//       {
-//         uid: req.params.id,
-//         "streak.current": streaks[0]?.highestCurrentStreak
-//       },
-//       { name: 1 }
-//     )
-
-//     const highestBestStreakHabit = await Habit.findOne(
-//       {
-//         uid: req.params.id,
-//         "streak.best": streaks[0]?.highestBestStreak
-//       },
-//       { name: 1 }
-//     )
-
-//     const mostCompletedHabit = await Habit.findOne(
-//       {
-//         uid
-//       },
-//       {
-//         name: 1,
-//         "progress.totalCompleted": 1
-//       },
-//       { $sort: { "progress.totalCompleted": -1 } }
-//     )
-
-//     const leastCompletedHabit = await Habit.findOne(
-//       { uid },
-//       { name: 1, "progress.totalCompleted": 1 },
-//       { sort: { "progress.totalCompleted": 1 } } // Sort by lowest completion
-//     )
-
-//     res.json({ basicStats, highestCurrentStreakHabit, highestBestStreakHabit })
-//   } catch (error) {
-//     res.status(500).json({ message: "Internal server error", error })
-//   }
-// })
 
 module.exports = router

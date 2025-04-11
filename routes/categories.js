@@ -1,6 +1,7 @@
 const express = require("express")
 const mongoose = require("mongoose")
 const category = require("../models/category_model")
+const verifyJWT = require("../middleware/verifyJWT")
 
 const router = express.Router()
 
@@ -9,8 +10,11 @@ router.get("/", (req, res) => {
   res.status(200).json({ message: "Categories Tab" })
 })
 
-router.get("/get-resource-count/:id", async (req, res) => {
+router.get("/get-resource-count/:id", verifyJWT, async (req, res) => {
   const uid = req.params.id
+  if (req.user.uid !== uid) {
+    return res.status(403).json({ message: "Forbidden: UID mismatch" })
+  }
   try {
     const resourceCount = await category.countDocuments({ uid })
     if (resourceCount > 0) {
@@ -24,8 +28,11 @@ router.get("/get-resource-count/:id", async (req, res) => {
 })
 
 // Get Categories for a specific user
-router.get("/get-categories/:id", async (req, res) => {
+router.get("/get-categories/:id", verifyJWT, async (req, res) => {
   const uid = req.params.id
+  if (req.user.uid !== uid) {
+    return res.status(403).json({ message: "Forbidden: UID mismatch" })
+  }
   try {
     const categories = await category
       .find({ uid })
@@ -42,9 +49,12 @@ router.get("/get-categories/:id", async (req, res) => {
 })
 
 // Create a new category
-router.post("/create-category", async (req, res) => {
+router.post("/create-category", verifyJWT, async (req, res) => {
   const categoryObject = req.body.category
   console.log("Category object", categoryObject)
+  if (req.user.uid !== categoryObject.uid) {
+    return res.status(403).json({ message: "Forbidden: UID mismatch" })
+  }
   try {
     const newCategory = new category(categoryObject)
     await newCategory.save()
@@ -56,9 +66,16 @@ router.post("/create-category", async (req, res) => {
 })
 
 // Delete a category
-router.delete("/delete-category/:id", async (req, res) => {
+router.delete("/delete-category/:id", verifyJWT, async (req, res) => {
   const id = req.params.id
   try {
+
+    const fetchedCategory = await category.findOne({id})
+
+    if (req.user.uid !== fetchedCategory.uid) {
+      return res.status(403).json({ message: "Forbidden: UID mismatch" });
+    }
+
     const response = await category.findOneAndDelete({ id }) // Keeping 'id' as per your setup
     if (response) {
       res.status(200).json({ message: "Category Deleted" })
@@ -72,8 +89,13 @@ router.delete("/delete-category/:id", async (req, res) => {
 })
 
 // Add Todo ID to Category
-router.patch("/push-todo-id/:id", async (req, res) => {
+router.patch("/push-todo-id/:id", verifyJWT, async (req, res) => {
   const userId = req.params.id
+
+  if (req.user.uid !== userId) {
+    return res.status(403).json({ message: "Forbidden: UID mismatch" });
+  }
+
   const { todoObjectId, categoryId } = req.body
 
   console.log("Push todo called in Categories")
@@ -101,7 +123,7 @@ router.patch("/push-todo-id/:id", async (req, res) => {
 })
 
 // Remove Todo ID from Category
-router.patch("/pull-todo-id/:id", async (req, res) => {
+router.patch("/pull-todo-id/:id", verifyJWT, async (req, res) => {
   console.log("Pull todo id called")
   const id = req.params.id
   const categoryId = req.body.categoryId
@@ -109,7 +131,7 @@ router.patch("/pull-todo-id/:id", async (req, res) => {
 
   try {
     const updatedCategory = await category.findOneAndUpdate(
-      { id: categoryId }, // Keeping 'id' as per your setup
+      { id: categoryId , uid : req.user.uid}, // Keeping 'id' as per your setup
       { $pull: { categoryTodos: todoObjectId } },
       { new: true }
     )
@@ -127,12 +149,12 @@ router.patch("/pull-todo-id/:id", async (req, res) => {
   }
 })
 
-router.patch("/update-category-status/:id", async (req, res) => {
+router.patch("/update-category-status/:id", verifyJWT, async (req, res) => {
   const id = req.params.id
   try {
     const updatedCategory = await category.findOneAndUpdate(
       {
-        id: id
+        id: id, uid : req.user.uid
       },
       { $set: { completed: true } },
       { new: true }
