@@ -30,22 +30,50 @@ router.post("/sendMessage", async (req, res) => {
   }
 })
 
-router.get("/get-messages/:id", async (req, res) => {
-  console.log("Get messages called",req.params.id)
-  try {
-    const  roomName  = req.params.id
-    const messages = await Chat.find({ roomName }).sort({ createdAt: 1 })
+// router.get("/get-messages/:id", async (req, res) => {
+//   console.log("Get messages called",req.params.id)
+//   try {
+//     const  roomName  = req.params.id
+//     const messages = await Chat.find({ roomName }).sort({ createdAt: 1 })
 
-    console.log("Messages",messages)
-    if(messages.length>0){
-      return res.status(200).json({ message: "Messages fetched", data: messages })
-    }else{
-      return res.status(200).json({ message: "Messages not fetched", data: messages })
+//     console.log("Messages",messages)
+//     if(messages.length>0){
+//       return res.status(200).json({ message: "Messages fetched", data: messages })
+//     }else{
+//       return res.status(200).json({ message: "Messages not fetched", data: messages })
+//     }
+//   } catch (error) {
+//     console.error("Error fetching messages:", error)
+//     return res.status(500).json({ message: "Internal Server Error" })
+//   }
+// })
+
+router.get("/get-messages/:id", async (req, res) => {
+  console.log("Get messages called", req.params.id);
+
+  const roomName = req.params.id;
+  const limit = parseInt(req.query.limit) || 20;
+  const before = req.query.before; // expecting a timestamp string
+
+  try {
+    const query = { roomName };
+
+    if (before) {
+      query.createdAt = { $lt: new Date(before) }; // Fetch messages older than this
     }
+
+    const messages = await Chat.find(query)
+      .sort({ createdAt: -1 }) // Most recent first
+      .limit(limit);
+
+    // Reverse messages so that frontend sees it from oldest to newest
+    const orderedMessages = messages.reverse();
+
+    return res.status(200).json({ message: "Messages fetched", data: orderedMessages });
   } catch (error) {
-    console.error("Error fetching messages:", error)
-    return res.status(500).json({ message: "Internal Server Error" })
+    console.error("Error fetching messages:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
-})
+});
 
 module.exports = router
